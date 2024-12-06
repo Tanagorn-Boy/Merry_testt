@@ -3,7 +3,7 @@ import { CustomButton } from "@/components/CustomUi";
 import { IoMdArrowBack } from "react-icons/io";
 import BackgroundPage from "@/components/BackgroundPage";
 import { NavBar } from "@/components/NavBar";
-import CustomSelect from "@/components/register/CustomSelect";
+// import CustomSelect from "@/components/register/CustomSelect";
 import { useAuth } from "../../contexts/AuthContext";
 
 function RegisterPage() {
@@ -390,12 +390,12 @@ function RegisterPage() {
                   </select>
                 </label>
 
-                <div>
+                {/* <div>
                   <CustomSelect
                     formData={hobbies}
                     updateHobbies={updateHobbies}
                   />
-                </div>
+                </div> */}
               </div>
             )}
             {step === 3 && (

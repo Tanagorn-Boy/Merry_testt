@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { MdError } from "react-icons/md";
 
+import Link from "next/link";
+
 function CustomInput({
   type,
   onChange,
@@ -106,12 +108,12 @@ export default function Login() {
 
           <div className="flex items-center gap-3">
             <p className="text-utility-second">Don't have an account?</p>
-            <a
+            <Link
               href="/register"
               className="font-bold text-primary-500 transition-colors duration-300 hover:text-primary-600"
             >
               Register
-            </a>
+            </Link>
           </div>
         </div>
       </article>
