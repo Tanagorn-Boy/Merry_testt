@@ -236,10 +236,15 @@ function MerryPackageEdit() {
                 Icon <span className="text-red-500">*</span>
               </label>
               <div className="mt-4 flex h-32 w-32 items-center justify-center rounded-3xl border">
-                {!newIcon && packageData.icon_url ? (
+                {/* แสดงภาพเดิมหรือภาพใหม่ */}
+                {newIcon || packageData.icon_url ? (
                   <div className="relative h-full w-full">
                     <img
-                      src={packageData.icon_url}
+                      src={
+                        newIcon
+                          ? URL.createObjectURL(newIcon) // แสดง preview ของภาพใหม่
+                          : packageData.icon_url // แสดงภาพเดิมจาก database
+                      }
                       alt="Icon"
                       className="h-full w-full rounded-3xl object-cover"
                     />
@@ -262,10 +267,10 @@ function MerryPackageEdit() {
                     />
                     <label
                       htmlFor="iconUpload"
-                      className="cursor-pointer text-primary-500"
+                      className="flex cursor-pointer flex-col items-center justify-center text-primary-500"
                     >
-                      <span className="text-3xl">+</span>
-                      <p>Upload Icon</p>
+                      <span className="text-3xl font-bold">+</span>
+                      <p className="text-sm font-medium">Upload Icon</p>
                     </label>
                   </>
                 )}
