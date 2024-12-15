@@ -12,6 +12,7 @@ function CustomInput({
   label = "Label",
   placeholder,
   className = "",
+  value,
   error = null,
 }) {
   let customStyle =
@@ -31,6 +32,7 @@ function CustomInput({
           type={type}
           placeholder={placeholder}
           className={customStyle}
+          value={value}
           onChange={onChange}
         />
         {error && <MdError className="absolute right-3 text-utility-third" />}
@@ -88,6 +90,7 @@ export default function Login() {
               label="Username or Email"
               placeholder="Enter Username or Email"
               className="w-full"
+              value={username}
               onChange={(e) => setUsername(e.target.value)}
               error={state.error?.username}
             />
@@ -97,6 +100,7 @@ export default function Login() {
               label="Password"
               placeholder="Enter password"
               className="w-full"
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
               error={state.error?.password}
             />

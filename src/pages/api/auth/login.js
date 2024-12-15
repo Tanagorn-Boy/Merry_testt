@@ -1,4 +1,6 @@
 import connectionPool from "@/utils/db";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -8,27 +10,69 @@ export default async function handler(req, res) {
   const { username, password } = req.body;
 
   try {
-    const sqlQuery = "SELECT * FROM users WHERE username = $1";
-    const { rows } = await connectionPool.query(sqlQuery, [username]);
+    const passwordQuery =
+      "SELECT user_id, password FROM users WHERE username = $1";
+    const passwordResult = await connectionPool.query(passwordQuery, [
+      username,
+    ]);
 
-    if (rows.length === 0) {
-      return res.status(404).json({
+    // Check username
+    if (passwordResult.rows.length === 0) {
+      return res.status(400).json({
         message: { username: "Invalid username or email" },
       });
     }
 
-    const user = rows[0];
+    const { user_id, password: hashedPassword } = passwordResult.rows[0];
 
-    if (user.password !== password) {
+    // Check password
+    const isValidPassword = await bcrypt.compare(password, hashedPassword);
+
+    if (!isValidPassword) {
       return res.status(400).json({
         message: { password: "Invalid password" },
       });
     }
-    // เพิ่มการส่ง role กลับไป
-    //return res.status(200).json({ message: "Login successful", role: user.role });
-    return res.status(200).json({ message: "Login successful" });
+
+    const userProfileQuery = `
+      SELECT
+        user_profiles.user_id,
+        user_Profiles.name,
+        user_Profiles.age,
+        gender.gender_name AS sexual_preference,
+        user_Profiles.image_profile
+      FROM user_profiles
+      LEFT JOIN Gender
+      ON user_Profiles.sexual_preference_id = gender.gender_id
+      WHERE user_profiles.user_id = $1
+    `;
+
+    const userProfileResult = await connectionPool.query(userProfileQuery, [
+      user_id,
+    ]);
+
+    const {
+      user_id: id,
+      name,
+      sexual_preference,
+      image_profile,
+    } = userProfileResult.rows[0];
+
+    const token = jwt.sign(
+      {
+        id,
+        name,
+        sexual_preference: sexual_preference || null,
+        image_profile: image_profile || null,
+      },
+      process.env.SECRET_KEY,
+      { expiresIn: "1h" },
+    );
+
+    return res.status(200).json({ message: "Login successful.", token });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({
+      message: "An unexpected error occurred. Please try again later.",
+    });
   }
 }
