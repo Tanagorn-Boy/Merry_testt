@@ -143,8 +143,31 @@ export default async function handler(req, res) {
   } else if (req.method === "DELETE") {
     // ลบแพ็กเกจที่ระบุด้วย `id`
     try {
+      const { id } = req.query;
+      if (!id) {
+        return res.status(400).json({ error: "Invalid package ID." });
+      }
+
+      {
+        /* 
+          // ลบไฟล์รูปภาพใน Cloudinary ถ้ามี
+    const queryFetch = `SELECT icon_url FROM packages WHERE package_id = $1`;
+    const { rows } = await connectionPool.query(queryFetch, [id]);
+
+    if (rows.length > 0 && rows[0].icon_url) {
+      const publicId = rows[0].icon_url.split('/').pop().split('.')[0];
+      await cloudinary.uploader.destroy(publicId);
+    }
+*/
+      }
+      // ลบข้อมูลจากฐานข้อมูล
       const query = `DELETE FROM packages WHERE package_id = $1`;
-      await connectionPool.query(query, [id]);
+      const result = await connectionPool.query(query, [id]);
+
+      if (result.rowCount === 0) {
+        return res.status(404).json({ error: "Package not found" });
+      }
+
       return res.status(200).json({ message: "Package deleted successfully!" });
     } catch (error) {
       console.error("Database Error:", error.message);
