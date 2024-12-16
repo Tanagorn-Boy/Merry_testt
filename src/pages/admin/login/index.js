@@ -1,4 +1,4 @@
-import { NavBar } from "@/components/NavBar";
+import { NavBarAdmin } from "@/components/admin/NavBarAdmin";
 import { CustomButton, CardImage } from "@/components/CustomUi";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useState } from "react";
@@ -54,7 +54,7 @@ export default function Login() {
 
   return (
     <main className="flex min-h-screen flex-col bg-utility-bgMain">
-      <NavBar />
+      <NavBarAdmin />
 
       {/* Login section */}
       <article className="container mx-auto flex w-full flex-grow flex-col items-center justify-center gap-10 px-5 py-12 lg:flex-row lg:gap-0 lg:p-10 xl:p-20">
