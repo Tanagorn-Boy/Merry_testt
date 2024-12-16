@@ -1,8 +1,14 @@
 import { AdminSideBar } from "@/components/admin/AdminSideBar";
 import AdminHeader from "@/components/admin/AdminHeader";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import { useAdminAuth } from "@/contexts/AdminAuthContext"; // Import Context
+import { jwtDecode } from "jwt-decode";
 
 function ComplaintList() {
+  const router = useRouter();
+  //const { isAuthenticated, logout } = useAdminAuth();
+
   // ข้อมูลตัวอย่าง
   const [data] = useState([
     {
@@ -106,6 +112,34 @@ function ComplaintList() {
         return "bg-gray-100 text-gray-500 px-3 py-1 rounded-full";
     }
   };
+
+  /* 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/admin/login");
+    }
+  }, [isAuthenticated, router]);
+  */
+  // Verify authentication
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      router.push("/admin/login");
+    } else {
+      try {
+        const decodedToken = jwtDecode(token);
+        const now = Date.now() / 1000;
+
+        if (decodedToken.exp < now) {
+          logout(); // Token expired, redirect to login
+        }
+      } catch (error) {
+        console.error("Token decoding error:", error);
+        logout(); // Invalid token, redirect to login
+      }
+    }
+  }, [router]);
 
   return (
     <div className="flex">

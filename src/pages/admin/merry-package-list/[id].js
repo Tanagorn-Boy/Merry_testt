@@ -4,6 +4,7 @@ import DeleteConfirmationModal from "@/components/admin/DeleteConfirmationModal"
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
 function MerryPackageEdit() {
   const router = useRouter();
@@ -38,7 +39,7 @@ function MerryPackageEdit() {
 
   const [packageData, setPackageData] = useState({
     name_package: "",
-    litmit_match: "",
+    limit_match: "",
     description: "",
     price: 0,
     icon_url: "",
@@ -66,10 +67,10 @@ function MerryPackageEdit() {
   };
 
   useEffect(() => {
-    if (id && !isSaving) {
+    if (id) {
       fetchPackageData();
     }
-  }, [id, isSaving]);
+  }, [id]);
 
   const fetchPackageData = async () => {
     try {
@@ -106,16 +107,36 @@ function MerryPackageEdit() {
       return;
     }
 
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("You are not logged in. Please log in again.");
+      router.push("/admin/login");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("name_package", packageData.name_package);
-    formData.append("litmit_match", packageData.litmit_match);
+    formData.append("limit_match", packageData.limit_match);
     formData.append("price", packageData.price);
     formData.append("description", JSON.stringify(details.map((d) => d.text)));
     if (newIcon) formData.append("icon", newIcon); // เพิ่มรูปภาพใหม่ถ้ามี
 
+    console.log("FormData before sending:", {
+      name_package: packageData.name_package,
+      limit_match: packageData.limit_match, // ตรวจสอบว่าค่านี้ถูกต้อง
+      price: packageData.price,
+      description: JSON.stringify(details.map((d) => d.text)),
+    });
+
     try {
+      console.log("before put");
+      console.log("Check Tokennn", token);
+
       const response = await axios.put(`/api/admin/packages/${id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       // ตรวจสอบว่า API ส่ง URL ของรูปภาพใหม่กลับมาหรือไม่
@@ -190,11 +211,11 @@ function MerryPackageEdit() {
                 </label>
                 <select
                   id="merryLimit"
-                  value={packageData.litmit_match}
+                  value={packageData.limit_match}
                   onChange={(e) =>
                     setPackageData({
                       ...packageData,
-                      litmit_match: e.target.value,
+                      limit_match: e.target.value,
                     })
                   }
                   className="mt-1 h-12 w-full rounded-md border-2 border-gray-300 px-4 shadow-sm"
@@ -352,65 +373,3 @@ function MerryPackageEdit() {
   );
 }
 export default MerryPackageEdit;
-
-/*
-<div className="p-4">
-      <h1 className="mb-4 text-2xl font-bold">Edit Package</h1>
-
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <form onSubmit={(e) => e.preventDefault()}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium">Package Name</label>
-            <input
-              type="text"
-              value={packageData.name_package}
-              onChange={(e) =>
-                setPackageData({ ...packageData, name_package: e.target.value })
-              }
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium">Merry Limit</label>
-            <input
-              type="number"
-              value={packageData.litmit_match}
-              onChange={(e) =>
-                setPackageData({ ...packageData, litmit_match: e.target.value })
-              }
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium">Description</label>
-            <textarea
-              value={packageData.description}
-              onChange={(e) =>
-                setPackageData({ ...packageData, description: e.target.value })
-              }
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={handleSave}
-            className="rounded-md bg-blue-500 px-4 py-2 text-white"
-          >
-            Save Changes
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push("/admin/merry-package-list")}
-            className="ml-2 rounded-md bg-gray-300 px-4 py-2"
-          >
-            Cancel
-          </button>
-        </form>
-      )}
-    </div>
-*/

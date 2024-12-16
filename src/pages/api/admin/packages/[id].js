@@ -2,9 +2,7 @@ import connectionPool from "@/utils/db";
 import { cloudinaryUpload } from "@/utils/upload";
 import multer from "multer";
 import cloudinary from "cloudinary";
-
-// กำหนด multerUpload
-const multerUpload = multer({ dest: "public/files" });
+import jwt from "jsonwebtoken";
 
 // ตั้งค่า Cloudinary
 cloudinary.config({
@@ -12,6 +10,9 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+// กำหนด multerUpload
+const multerUpload = multer({ dest: "public/files" });
 
 // กำหนด config สำหรับ Next.js API Route (ต้องปิด bodyParser)
 export const config = {
@@ -31,7 +32,7 @@ export default async function handler(req, res) {
     // ดึงข้อมูลแพ็กเกจที่ระบุด้วย `id`
     try {
       // const result = await connectionPool.query("SELECT * FROM package WHERE package_id = $1",[id]); เขียนแบบนี้ได้
-      const query = `SELECT * FROM package WHERE package_id = $1`;
+      const query = `SELECT * FROM packages WHERE package_id = $1`;
       const { rows } = await connectionPool.query(query, [id]);
 
       if (rows.length === 0) {
@@ -49,13 +50,27 @@ export default async function handler(req, res) {
           console.error("File upload error:", err);
           return res.status(500).json({ error: "File upload failed" });
         }
-        // อัปเดตข้อมูลแพ็กเกจ
-        const { name_package, litmit_match, description, price } = req.body;
 
+        const token = req.headers.authorization?.split(" ")[1];
+        if (!token) {
+          return res.status(401).json({ error: "Unauthorized - No Token" });
+        }
+        // updatedBy = from id admin at token
+        let adminId;
+        try {
+          const decoded = jwt.verify(token, process.env.SECRET_KEY);
+          adminId = decoded.admin_id;
+        } catch (err) {
+          console.error("JWT Verification Error:", err.message);
+          return res.status(401).json({ error: "Invalid Token" });
+        }
+        // อัปเดตข้อมูลแพ็กเกจ
+        const { name_package, limit_match, description, price } = req.body;
         let iconUrl = req.body.icon_url || null; // ใช้รูปภาพเดิมหากไม่มีการอัปโหลดใหม่
+
         if (!req.file) {
           try {
-            const query = `SELECT icon_url FROM package WHERE package_id = $1`;
+            const query = `SELECT icon_url FROM packages WHERE package_id = $1`;
             const { rows } = await connectionPool.query(query, [id]);
             if (rows.length > 0) {
               iconUrl = rows[0].icon_url; // ใช้ค่าเดิมจากฐานข้อมูล
@@ -77,31 +92,35 @@ export default async function handler(req, res) {
           }
         }
 
-        if (!name_package || !litmit_match || description === undefined) {
+        /* 
+        if (req.file) {
+          try {
+            const uploadResult = await cloudinaryUpload(req.file);
+            iconUrl = uploadResult.url;
+          } catch (error) {
+            console.error("Error uploading to Cloudinary:", error.message);
+            return res.status(500).json({ error: "Failed to upload icon." });
+          }
+        }
+          */
+
+        if (!name_package || !limit_match || description === undefined) {
           return res.status(400).json({ error: "Missing required fields." });
         }
 
         try {
-          console.log("Updating package with ID:", id);
-          console.log("Data to update:", {
-            name_package,
-            litmit_match,
-            description,
-            iconUrl,
-            price,
-          });
-
           const query = `
-        UPDATE package
-        SET name_package = $1, description = $2, litmit_match = $3, price = $4, icon_url = $5, updated_at = NOW()
-        WHERE package_id = $6
+        UPDATE packages
+        SET name_package = $1, description = $2, limit_match = $3, price = $4, icon_url = $5, created_by = $6, updated_date = NOW()
+        WHERE package_id = $7
       `;
           const result = await connectionPool.query(query, [
             name_package,
             description,
-            litmit_match,
+            limit_match,
             price,
             iconUrl,
+            adminId,
             id,
           ]);
 
@@ -124,7 +143,7 @@ export default async function handler(req, res) {
   } else if (req.method === "DELETE") {
     // ลบแพ็กเกจที่ระบุด้วย `id`
     try {
-      const query = `DELETE FROM package WHERE package_id = $1`;
+      const query = `DELETE FROM packages WHERE package_id = $1`;
       await connectionPool.query(query, [id]);
       return res.status(200).json({ message: "Package deleted successfully!" });
     } catch (error) {
