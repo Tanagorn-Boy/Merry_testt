@@ -14,6 +14,8 @@ export const config = {
 };
 
 export default async function handle(req, res) {
+  console.log("test Method : ", req.method);
+
   if (req.method === "POST") {
     multerUpload.single("icon")(req, res, async (err) => {
       if (err) {
@@ -96,11 +98,16 @@ export default async function handle(req, res) {
     });
   } else if (req.method === "GET") {
     // ดึงข้อมูลแพ็กเกจทั้งหมด
-    console.log("Before try");
+    console.log("Get ?");
 
     try {
+      console.log("in Try");
+
       const query = `SELECT * FROM packages ORDER BY created_date DESC`;
       const { rows } = await connectionPool.query(query);
+      console.log("test rows  query", rows);
+
+      console.log("after query before status200");
 
       return res.status(200).json(rows);
     } catch (error) {

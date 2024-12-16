@@ -11,12 +11,14 @@ function AdminAuthProvider({ children }) {
     success: null,
     admin: null,
     error: null,
-    isAuthenticated: false,
-    token: null,
+    //isAuthenticated: false,
+    //   token: null,
   });
 
   const router = useRouter();
 
+  {
+    /* 
   useEffect(() => {
     // ตรวจสอบ token ใน LocalStorage
     const token = localStorage.getItem("token");
@@ -64,7 +66,8 @@ function AdminAuthProvider({ children }) {
       }));
     }
   }, []);
-
+*/
+  }
   //const [isAuthenticated, setIsAuthenticated] = useState(false);
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -74,17 +77,17 @@ function AdminAuthProvider({ children }) {
         `${apiBaseUrl}/api/auth/admin/login`,
         data,
       );
-      const token = result.data.token; // รับ Token back จาก api/auth/admin/login
-      localStorage.setItem("token", token); // บันทึกโทเค็นใน Local Storage
+      //const token = result.data.token; // รับ Token back จาก api/auth/admin/login
+      // localStorage.setItem("token", token); // บันทึกโทเค็นใน Local Storage
 
-      const userDataFromToken = jwtDecode(token);
+      //const userDataFromToken = jwtDecode(token);
 
       setState({
         loading: false,
         success: result.data.message,
-        admin: userDataFromToken,
-        isAuthenticated: true,
-        token,
+        // admin: userDataFromToken,
+        // isAuthenticated: true,
+        // token,
         error: null,
       });
       router.push("/admin/merry-package-list");
