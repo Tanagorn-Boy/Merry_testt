@@ -66,7 +66,7 @@ function AuthProvider({ children }) {
 
   const login = async (data) => {
     setState((prevState) => ({ ...prevState, loading: true }));
-
+    //test
     try {
       const result = await axios.post(`${apiBaseUrl}/api/auth/login`, data);
 
