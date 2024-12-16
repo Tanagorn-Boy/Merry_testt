@@ -32,18 +32,12 @@ function RegisterPage() {
   const [aboutme, setAboutme] = useState("");
   const [hobbies, sethobbies] = useState("");
   const router = useRouter();
-
-  console.log("TEstselectedLocation", selectedLocation);
-  console.log("TEstcitys", citys);
-
   const [preferencesOptions, setPreferencesOptions] = useState([]);
   const [meetingOptions, setMeetingOptions] = useState([]);
   const [racialOptions, setRacialOptions] = useState([]);
   const [locations, setLocations] = useState([]);
   const [cities, setCities] = useState([]);
-
   const [allCities, setAllCities] = useState([]);
-  console.log("test", locations);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,8 +79,6 @@ function RegisterPage() {
       try {
         const response = await axios.get("/api/auth/registerStep2");
         console.log("API Response:", response.data);
-
-        // Set Locations
         setLocations(
           response.data.location.map((loc) => ({
             value: loc.location_id.toString(),
@@ -94,7 +86,6 @@ function RegisterPage() {
           })),
         );
 
-        // Set All Cities
         setAllCities(response.data.city);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -124,7 +115,6 @@ function RegisterPage() {
   };
 
   const [avatar, setAvatars] = useState("");
-  console.log("TestAvater", avatar);
   const { register } = useAuth();
 
   const handleSubmit = async (event) => {
@@ -299,10 +289,6 @@ function RegisterPage() {
                             </div>
                           )}
                           {num === 2 && (
-                            // <h1 className="text-center font-nunito text-[16px] font-extrabold text-second-500 lg:text-right lg:leading-[24px]">
-                            //   Identities and Interests
-                            // </h1>
-
                             <h1 className="font-nunito text-[12px] font-extrabold text-second-500 lg:text-[12px] lg:leading-[24px]">
                               Identities and Interests
                             </h1>
@@ -597,7 +583,7 @@ function RegisterPage() {
 
                 <div>
                   {step === 3 && (
-                    <div className="lg:flex mr-20 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div className="mr-20 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:flex">
                       <ProfilePicturesForm
                         avatar={avatar}
                         handleFileChange={handleFileChange}

@@ -13,7 +13,7 @@ function AuthProvider({ children }) {
   });
 
   const router = useRouter();
-  const { push } = useRouter();
+  // const { push } = useRouter();
 
   const apiBaseUrl = "http://localhost:3000";
 
