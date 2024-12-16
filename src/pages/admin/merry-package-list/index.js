@@ -107,10 +107,27 @@ function MerryPackageList() {
   };
 
   // Verify authentication
-
   useEffect(() => {
-    fetchPackages(); // Fetch package data
-  }, []);
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      router.push("/admin/login");
+    } else {
+      try {
+        const decodedToken = jwtDecode(token);
+        const now = Date.now() / 1000;
+
+        if (decodedToken.exp < now) {
+          logout(); // Token expired, redirect to login
+        } else {
+          fetchPackages(); // Fetch package data
+        }
+      } catch (error) {
+        console.error("Token decoding error:", error);
+        logout(); // Invalid token, redirect to login
+      }
+    }
+  }, [router]);
 
   return (
     <div className="flex h-screen bg-gray-100">
