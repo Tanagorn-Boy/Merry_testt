@@ -23,7 +23,9 @@ function MerryPackageList() {
     try {
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
       setLoading(true);
+      console.log("apiBaseUrl : ", apiBaseUrl);
       const res = await axios.get(`${apiBaseUrl}/api/admin/packages`);
+      console.log("res data :", res);
       setPackages(res.data); // เก็บข้อมูลใน state
     } catch (error) {
       console.error("Error fetching packages:", error);
@@ -120,6 +122,7 @@ function MerryPackageList() {
         if (decodedToken.exp < now) {
           logout(); // Token expired, redirect to login
         } else {
+          console.log("test else");
           fetchPackages(); // Fetch package data
         }
       } catch (error) {
