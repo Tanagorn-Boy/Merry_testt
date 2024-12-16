@@ -66,7 +66,7 @@ function AdminAuthProvider({ children }) {
   }, []);
 
   //const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const apiBaseUrl = "http://localhost:3000";
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   const login = async (data) => {
     try {
