@@ -31,6 +31,8 @@ function MerryPackageAdd() {
 
   const handleAddPackage = async () => {
     try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
       // Validation ข้อมูลก่อนส่ง
       if (!packageName || !merryLimit === 0) {
         // || details.length
@@ -57,7 +59,7 @@ function MerryPackageAdd() {
 
       // ส่งคำขอไปยัง API
       const res = await axios.post(
-        "http://localhost:3000/api/admin/packages",
+        `${apiBaseUrl}/api/admin/packages`,
         formData,
         {
           headers: {

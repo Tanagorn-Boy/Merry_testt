@@ -21,8 +21,10 @@ function MerryPackageList() {
   // ฟังก์ชันดึงข้อมูล package
   const fetchPackages = async () => {
     try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
       setLoading(true);
-      const res = await axios.get("http://localhost:3000/api/admin/packages");
+      const res = await axios.get(`${apiBaseUrl}/api/admin/packages`);
       setPackages(res.data); // เก็บข้อมูลใน state
     } catch (error) {
       console.error("Error fetching packages:", error);
@@ -81,9 +83,11 @@ function MerryPackageList() {
   // แก้ไขฟังก์ชัน handleDelete ให้ลบข้อมูลจากฐานข้อมูล
   const handleDelete = async () => {
     try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      
       // เรียก API เพื่อลบข้อมูลในฐานข้อมูล
       await axios.delete(
-        `http://localhost:3000/api/admin/packages/${detailToDelete}`,
+        `${apiBaseUrl}/api/admin/packages/${detailToDelete}`,
       );
       //, {data: { id: detailToDelete },}
       // อัปเดตรายการ package หลังลบสำเร็จ

@@ -21,7 +21,9 @@ export default function MerryPackage() {
     // ดึงข้อมูลแพ็กเกจ
     const fetchPackages = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/api/packages");
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+        
+        const response = await axios.get(`${apiBaseUrl}/api/packages`);
         setPackages(response.data);
         setLoading(false);
       } catch (err) {

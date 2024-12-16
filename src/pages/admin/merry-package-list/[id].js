@@ -26,8 +26,10 @@ function MerryPackageEdit() {
   // แก้ไขฟังก์ชัน handleDelete ให้ลบข้อมูลจากฐานข้อมูล
   const handleDeletePackage = async () => {
     try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      
       // เรียก API เพื่อลบข้อมูลในฐานข้อมูล
-      await axios.delete(`http://localhost:3000/api/admin/packages/${id}`);
+      await axios.delete(`${apiBaseUrl}/api/admin/packages/${id}`);
       router.push("/admin/merry-package-list");
       //setDetails(details.filter((detail) => detail.id !== detailToDelete));
       // ปิด Modal

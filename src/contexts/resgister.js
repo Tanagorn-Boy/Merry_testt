@@ -13,7 +13,6 @@ function AuthProvider({ children }) {
   });
 
   const router = useRouter();
-  const { push } = useRouter();
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -22,7 +21,7 @@ function AuthProvider({ children }) {
       await axios.post("/api/auth/register", data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      push("/login");
+      router.push("/login");
     } catch (error) {
       console.error(
         "Registration failed:",
