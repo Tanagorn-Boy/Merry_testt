@@ -13,28 +13,9 @@ function AuthProvider({ children }) {
   });
 
   const router = useRouter();
-  // const { push } = useRouter();
+  const { push } = useRouter();
 
-  const apiBaseUrl = "http://localhost:3000";
-
-  const login = async (data) => {
-    try {
-      const result = await axios.post(`${apiBaseUrl}/api/auth/login`, data);
-
-      setState((prevState) => ({
-        ...prevState,
-        success: result.data?.message,
-        error: null,
-      }));
-
-      router.push("/");
-    } catch (error) {
-      setState((prevState) => ({
-        ...prevState,
-        error: error.response?.data?.message || "Login failed",
-      }));
-    }
-  };
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const register = async (data) => {
     try {
@@ -51,9 +32,7 @@ function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ state, login, register }}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={{ register }}>{children}</AuthContext.Provider>
   );
 }
 
