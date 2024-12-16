@@ -23,6 +23,10 @@ export const config = {
 
 export default async function handler(req, res) {
   const { id } = req.query;
+  console.log("test ID", id);
+
+  console.log("Request Method:", req.method);
+  console.log("Deleting package with ID:", id);
 
   if (!id) {
     return res.status(400).json({ error: "Invalid package ID." });
@@ -142,12 +146,11 @@ export default async function handler(req, res) {
     }
   } else if (req.method === "DELETE") {
     // ลบแพ็กเกจที่ระบุด้วย `id`
+    console.log("DELETE Method Called");
     try {
-      const { id } = req.query;
       if (!id) {
-        return res.status(400).json({ error: "Invalid package ID." });
+        return res.status(400).json({ error: "Package ID is required." });
       }
-
       {
         /* 
           // ลบไฟล์รูปภาพใน Cloudinary ถ้ามี
@@ -174,7 +177,11 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Failed to delete package." });
     }
   } else {
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate",
+    );
     res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 }
