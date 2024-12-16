@@ -96,6 +96,8 @@ export default async function handle(req, res) {
     });
   } else if (req.method === "GET") {
     // ดึงข้อมูลแพ็กเกจทั้งหมด
+    console.log("Before try");
+
     try {
       const query = `SELECT * FROM packages ORDER BY created_date DESC`;
       const { rows } = await connectionPool.query(query);
