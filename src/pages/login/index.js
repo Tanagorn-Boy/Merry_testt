@@ -5,6 +5,7 @@ import { useState } from "react";
 import { MdError } from "react-icons/md";
 
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 function CustomInput({
   type,
@@ -46,7 +47,13 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const { state, login } = useAuth();
+  const { state, login, isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  if (isAuthenticated) {
+    router.push("/");
+    return;
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault();

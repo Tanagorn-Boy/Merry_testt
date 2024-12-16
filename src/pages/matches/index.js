@@ -1,16 +1,20 @@
 import { FiSearch } from "react-icons/fi";
 import { GoHeartFill } from "react-icons/go";
+import { TbLoader2 } from "react-icons/tb";
 
 import { NavBar } from "@/components/NavBar";
 import { CustomButton } from "@/components/CustomUi";
 
+import axios from "axios";
+import apiClient from "@/utils/jwtInterceptor";
+
 import { useEffect, useState } from "react";
 import { Range } from "react-range";
 import dynamic from "next/dynamic";
-
-import axios from "axios";
-
 import Link from "next/link";
+
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/router";
 
 const LazyCardSwiper = dynamic(() => import("@/components/CardSwiper"), {
   ssr: false,
@@ -260,72 +264,76 @@ export default function Matches() {
   const [genderList, setGenderList] = useState([]);
   const [selectedGender, setSelectedGender] = useState([]);
   const [age, setAge] = useState([18, 50]);
+  const [matchesLoading, setMatchesLoading] = useState(false);
 
-  const fetchUserProfiles = async () => {
-    try {
-      const queryParams = new URLSearchParams();
-
-      if (selectedGender.length > 0) {
-        selectedGender.forEach((gender) => {
-          queryParams.append("gender", gender);
-        });
-      }
-
-      if (age[0]) {
-        queryParams.append("minAge", age[0]);
-      }
-
-      if (age[1]) {
-        queryParams.append("maxAge", age[1]);
-      }
-
-      const response = await axios.get(
-        `http://localhost:3000/api/users/profile?${queryParams.toString()}`,
-      );
-
-      console.log(response.data);
-
-      setUserProfiles(response.data);
-    } catch (error) {
-      console.error("Error fetching user profiles:", error);
-    }
-  };
-
-  const fetchGenderList = async () => {
-    try {
-      const response = await axios.get(`http://localhost:3000/api/genders`);
-
-      setGenderList(response.data);
-    } catch (error) {
-      console.error("Error fetching gender list:", error);
-    }
-  };
+  const { state, isAuthenticated } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchTimeout = setTimeout(() => {
-      fetchUserProfiles();
-    }, 500);
+    if (state.loading) return;
 
-    return () => clearTimeout(fetchTimeout);
-  }, [selectedGender, age]);
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
 
-  useEffect(() => {
-    fetchGenderList();
-  }, []);
+    const fetchData = async () => {
+      try {
+        setMatchesLoading(true);
+
+        // Fetch gender list
+        const genderResponse = await apiClient.get(`/api/genders`);
+        setGenderList(genderResponse.data);
+
+        // Fetch user profiles
+        const queryParams = new URLSearchParams();
+        if (selectedGender.length > 0) {
+          selectedGender.forEach((gender) => {
+            queryParams.append("gender", gender);
+          });
+        }
+        if (age[0]) queryParams.append("minAge", age[0]);
+        if (age[1]) queryParams.append("maxAge", age[1]);
+
+        const profileResponse = await apiClient.get(
+          `/api/users/profile?${queryParams.toString()}`,
+        );
+
+        setUserProfiles(profileResponse.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setMatchesLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [isAuthenticated, state.loading, selectedGender, age, router]);
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <main className="items flex min-h-screen flex-col bg-utility-bg">
       <NavBar />
+
       <div className="flex flex-grow">
         <LeftSidebar />
 
-        <section className="relative flex w-[20rem] flex-grow flex-col justify-center">
-          <LazyCardSwiper userProfiles={userProfiles} />
+        {matchesLoading ? (
+          <div className="flex flex-grow flex-col items-center justify-center text-utility-primary">
+            <TbLoader2 className="size-20 animate-spin" />
+          </div>
+        ) : (
+          <section className="relative flex w-[20rem] flex-grow flex-col justify-center">
+            <LazyCardSwiper userProfiles={userProfiles} />
 
-          <p className="absolute bottom-5 z-30 w-full text-center text-fourth-700">
-            Merry limit today <span className="text-primary-400">2/20</span>
-          </p>
-        </section>
+            <p className="absolute bottom-5 z-30 w-full text-center text-fourth-700">
+              Merry limit today <span className="text-primary-400">2/20</span>
+            </p>
+          </section>
+        )}
 
         <RightSidebar
           age={age}
