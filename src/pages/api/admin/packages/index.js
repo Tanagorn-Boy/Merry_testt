@@ -1,6 +1,7 @@
 import connectionPool from "@/utils/db";
 import { cloudinaryUpload } from "@/utils/upload";
 import multer from "multer";
+import jwt from "jsonwebtoken";
 
 // ตั้งค่าการเก็บไฟล์ด้วย multer
 const multerUpload = multer({ dest: "public/files" });
@@ -23,9 +24,29 @@ export default async function handle(req, res) {
       }
 
       try {
+        // ดึง token จาก Authorization Header
+        const authHeader = req.headers.authorization;
+        console.log("Authorization Headerrrrr:", authHeader);
+
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+          return res.status(401).json({ error: "Unauthorized" });
+        }
+        const token = authHeader.split(" ")[1]; // แยก token ออกจาก "Bearer <token>"
+
+        let adminId;
+        try {
+          const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
+          console.log("Decoded Token:", decodedToken);
+
+          adminId = decodedToken.admin_id; // ดึง admin_id จาก payload ของ token
+        } catch (err) {
+          console.error("Invalid token:", err.message);
+          return res.status(401).json({ error: "Invalid token" });
+        }
+
         const { package_name, merry_limit, price, details } = req.body;
 
-        // ตรวจสอบข้อมูล
+        // Validation ข้อมูล
         if (!package_name || !merry_limit || !price) {
           return res.status(400).json({ error: "Missing required fields." });
         }
@@ -33,6 +54,7 @@ export default async function handle(req, res) {
         // แปลง price เป็นตัวเลข
         const numericPrice = Number(price);
 
+        // แปลง `details` เป็น JSON
         let parsedDetails = [];
         if (details) {
           try {
@@ -51,8 +73,8 @@ export default async function handle(req, res) {
         }
 
         const query = `
-            INSERT INTO package (name_package, description, litmit_match, price, icon_url, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+            INSERT INTO packages (name_package, description, limit_match, price, icon_url, created_date, updated_date, created_by)
+            VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), $6)
           `;
         const values = [
           package_name,
@@ -60,11 +82,8 @@ export default async function handle(req, res) {
           merry_limit,
           numericPrice,
           iconUrl,
-        ]; //JSON.stringify(details)
-
-        console.log("Debugging Before Query Execution:");
-        console.log("Query:", query);
-        console.log("Values:", values);
+          adminId, // ใช้ adminId จาก token
+        ];
 
         await connectionPool.query(query, values);
 
@@ -78,7 +97,7 @@ export default async function handle(req, res) {
   } else if (req.method === "GET") {
     // ดึงข้อมูลแพ็กเกจทั้งหมด
     try {
-      const query = `SELECT * FROM package ORDER BY created_at DESC`;
+      const query = `SELECT * FROM packages ORDER BY created_date DESC`;
       const { rows } = await connectionPool.query(query);
 
       return res.status(200).json(rows);

@@ -1,9 +1,10 @@
 import { AdminSideBar } from "@/components/admin/AdminSideBar";
 import AdminHeader from "@/components/admin/AdminHeader";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
 import DeleteConfirmationModal from "@/components/admin/DeleteConfirmationModal";
+import { jwtDecode } from "jwt-decode";
 
 function MerryPackageAdd() {
   const router = useRouter(); // เรียกใช้ useRouter
@@ -37,20 +38,16 @@ function MerryPackageAdd() {
         return;
       }
 
-      {
-        /* 
-          ส่งโดยไม่ใช่ formData  ก่อนที่จะมี cloudinary
-      // Step 2: ส่งข้อมูลแพ็กเกจไปยัง API
-      const packageData = {
-        package_name: packageName,
-        merry_limit: parseInt(merryLimit || "0", 10),
-        price: parseFloat(price || "0"),
-        avatar: avatar,
-        details: JSON.stringify(details.map((d) => d.text)) || null,
-      };
-      console.log("Sending data to API:", packageData);
-*/
+      // ดึง Token จาก Local Storage หรือ Context
+      const token = localStorage.getItem("token");
+      console.log("This is Token from UI ADD", token);
+
+      if (!token) {
+        alert("You are not authenticated. Please log in.");
+        return;
       }
+
+      // สร้าง FormData สำหรับส่งข้อมูล
       const formData = new FormData();
       formData.append("package_name", packageName);
       formData.append("merry_limit", merryLimit);
@@ -58,11 +55,15 @@ function MerryPackageAdd() {
       formData.append("details", JSON.stringify(details.map((d) => d.text))); // แปลง details เป็น JSON string
       if (icon) formData.append("icon", icon);
 
+      // ส่งคำขอไปยัง API
       const res = await axios.post(
         "http://localhost:3000/api/admin/packages",
         formData,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`, // ส่ง Token ใน Header
+          },
         },
       );
       console.log("Response from APIIIII:", res.data);
@@ -125,6 +126,31 @@ function MerryPackageAdd() {
   const handleDelete = (id) => {
     setDetails(details.filter((detail) => detail.id !== id));
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token"); // ดึง token จาก localStorage
+    if (token) {
+      try {
+        const decoded = jwtDecode(token); // Decode Token
+        const now = Math.floor(Date.now() / 1000); // เวลา ณ ปัจจุบัน (ในหน่วยวินาที)
+
+        if (decoded.exp < now) {
+          // ตรวจสอบว่า Token หมดอายุหรือไม่
+          alert("Session expired. Please log in again.");
+          localStorage.removeItem("token"); // ลบ Token ที่หมดอายุ
+          router.push("/admin/login"); // Redirect ไปหน้า Login
+        }
+      } catch (err) {
+        console.error("Invalid token:", err);
+        alert("Invalid session. Please log in.");
+        localStorage.removeItem("token"); // ลบ Token ที่ไม่ถูกต้อง
+        router.push("/admin/login"); // Redirect ไปหน้า Login
+      }
+    } else {
+      alert("You are not logged in.");
+      router.push("/admin/login");
+    }
+  }, [router]);
 
   return (
     <div className="flex h-screen bg-gray-50">

@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import DeleteConfirmationModal from "@/components/admin/DeleteConfirmationModal";
+import { jwtDecode } from "jwt-decode";
 
 function MerryPackageList() {
   const [packages, setPackages] = useState([]);
@@ -15,15 +16,25 @@ function MerryPackageList() {
   const [searchQuery, setSearchQuery] = useState(""); // for Search
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [detailToDelete, setDetailToDelete] = useState(null); // state สำหรับ delete โดยเก็บค่า id ของแถวนั้นๆ
+  const [loading, setLoading] = useState(true); // State for loading
 
   // ฟังก์ชันดึงข้อมูล package
   const fetchPackages = async () => {
     try {
+      setLoading(true);
       const res = await axios.get("http://localhost:3000/api/admin/packages");
       setPackages(res.data); // เก็บข้อมูลใน state
     } catch (error) {
       console.error("Error fetching packages:", error);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // Logout function in case token is invalid
+  const logout = () => {
+    localStorage.removeItem("token");
+    router.push("/admin/login");
   };
 
   // ฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงใน Search
@@ -94,15 +105,33 @@ function MerryPackageList() {
     setDetailToDelete(null);
   };
 
-  // ดึงข้อมูล package จาก API
+  // Verify authentication
   useEffect(() => {
-    fetchPackages();
-  }, []);
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      router.push("/admin/login");
+    } else {
+      try {
+        const decodedToken = jwtDecode(token);
+        const now = Date.now() / 1000;
+
+        if (decodedToken.exp < now) {
+          logout(); // Token expired, redirect to login
+        } else {
+          fetchPackages(); // Fetch package data
+        }
+      } catch (error) {
+        console.error("Token decoding error:", error);
+        logout(); // Invalid token, redirect to login
+      }
+    }
+  }, [router]);
 
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <AdminSideBar />
+      <AdminSideBar logout={logout} />
 
       {/* Main Content */}
       <main className="flex-1">
@@ -168,13 +197,13 @@ function MerryPackageList() {
                     )}
                   </td>
                   <td className="px-6 py-4 align-middle">{pkg.name_package}</td>
-                  <td className="px-6 py-4 align-middle">{pkg.litmit_match}</td>
+                  <td className="px-6 py-4 align-middle">{pkg.limit_match}</td>
                   <td className="px-6 py-4 align-middle">
-                    {new Date(pkg.created_at).toLocaleString()}
+                    {new Date(pkg.created_date).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 align-middle">
-                    {pkg.updated_at
-                      ? new Date(pkg.updated_at).toLocaleString()
+                    {pkg.updated_date
+                      ? new Date(pkg.updated_date).toLocaleString()
                       : "Not updated"}
                   </td>
                   <td className="px-6 py-4 align-middle">
